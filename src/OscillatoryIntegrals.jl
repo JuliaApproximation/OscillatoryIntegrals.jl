@@ -27,8 +27,8 @@ end
 ## Webers algorithm for Fourier transforms
 
 function webersum(cfs,ω)
-    p0=0
-    p1=1
+    p0=zero(ω)
+    p1=one(ω)
     ret=p1*first(cfs)
     for k=2:length(cfs)
         p1,p0=2*(1-k+ω)/(k-1)*p1-p0,p1
