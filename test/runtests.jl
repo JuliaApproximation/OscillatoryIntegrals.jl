@@ -18,3 +18,5 @@ f=Fun(x->sech(x-0.1),Laurent(PeriodicLine()))
 @test_approx_eq_eps fourier(f,10.4) (2.557186179286481e-7 + 4.356459741299553e-7*im) 10e-13
 @test_approx_eq_eps fourier(f,-10.4) (2.557186179286481e-7 - 4.356459741299553e-7*im) 10e-13
 
+f=Fun(sech,Line())
+@test_approx_eq fourier(f,2.) 0.27101495139940088877738507029

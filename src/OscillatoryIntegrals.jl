@@ -2,7 +2,9 @@ module OscillatoryIntegrals
     using Base,ApproxFun
 
 
-export fourier,fourierintegral
+# TODO: Fourier weight
+
+export fourier,fourierintegral,fouriercauchy
 
 
 ## fourierintegral calculates a function u so that u(x) exp(i ω x)
@@ -48,5 +50,42 @@ function fourier(f::Fun{Laurent},ω)
         4π*exp(ω)*webersum(f.coefficients[3:2:end],-ω)
     end
 end
+
+
+function fourier{S,R<:Ray,T}(f::Fun{MappedSpace{S,R,T}},ω)
+    if ω==0
+        sum(f)
+    else
+        D=Derivative(space(f))
+        u=(D+im*ω)\f
+        -first(u)
+    end
+end
+
+function fourier{S,L<:Line,T}(f::Fun{MappedSpace{S,L,T}},ω)
+    @assert domain(f)==Line()
+    if ω==0
+        sum(f)
+    else
+        fourier(Fun(x->f[x],Ray()),ω)-fourier(Fun(x->f[x],Ray(0.,π)),ω)
+    end
+end
+
+
+
+## fouriercauchy
+# calculates cauchy transform of f[x]*exp(im*ω*x)
+
+
+function fouriercauchy{S,L<:Line,T}(s::Bool,f::Fun{MappedSpace{S,L,T}},ω,z)
+    @assert isreal(z)
+    x=Fun(identity,space(f))
+    M=Multiplication(x-z,space(f))
+    g=Fun(f-f[z],rangespace(M))
+    u=M\g
+    ret=fourier(u,ω)/(2π*im)
+    s?(ret+f[z]*exp(im*ω*z)):ret
+end
+
 
 end #module
