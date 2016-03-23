@@ -1,6 +1,10 @@
+__precompile__()
 module OscillatoryIntegrals
-    using Base,ApproxFun
+    using Base, ApproxFun, Plots
 
+    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate
+
+    include("Bessel.jl")
 
 # TODO: Fourier weight
 
@@ -17,15 +21,33 @@ fourierintegral(f::Fun{Chebyshev},ω)=ω==0?integrate(f):
         [BasisFunctional(ceil(Integer,ω));Derivative()+im*ω]\[0.,f]
 
 ## fourier returns the fourier transform
-# \int f(x) exp(i*w*x) dx
+# ∫ f(x) exp(i*w*x) dx
 
 function fourier(f,ω)
     u=fourierintegral(f,ω)
     last(u)*exp(im*ω)-first(u)*exp(-im*ω)
 end
 
+# Fourier transform of Legendre polynomials is known
+# ∫₋₁⁺¹ Pⱼ(x) e⁻ⁱʷˣ dx = 2(-i)ʲ jⱼ(ω)
 
-
+function fourier{T}(f::Fun{Jacobi{T,Interval{T}},T})
+    a,b = f.space.a,f.space.b
+    @assert a == b == 0
+    @assert domain(f) == Interval{T}()
+    cfs = complex(coefficients(f))
+    s = 2
+    for i=1:2:length(cfs)
+        cfs[i] *= s
+        s *= -1
+    end
+    s = -2
+    for i=2:2:length(cfs)
+        cfs[i] *= im*s
+        s *= -1
+    end
+    Fun(cfs,Besselj())
+end
 ## Webers algorithm for Fourier transforms
 
 function webersum(cfs,ω)
@@ -39,36 +61,27 @@ function webersum(cfs,ω)
     ret
 end
 
-function fourier(f::Fun{Laurent},ω)
-    @assert domain(f)==PeriodicLine()
+fourier(f::Fun,ω) = ω == 0 ? sum(f) : fourier(space(f),coefficients(f),ω)
 
-    if ω==0
-        sum(f)
-    elseif ω>0
-        4π*exp(-ω)*webersum(f.coefficients[2:2:end],ω)
+
+function fourier{DD<:PeriodicLine}(S::Laurent{DD},f,ω)
+    #@assert domain(f)==PeriodicLine()
+    if ω>0
+        4π*exp(-ω)*webersum(f[2:2:end],ω)
     else # ω<0
-        4π*exp(ω)*webersum(f.coefficients[3:2:end],-ω)
+        4π*exp(ω)*webersum(f[3:2:end],-ω)
     end
 end
 
-
-function fourier{S,R<:Ray,T}(f::Fun{MappedSpace{S,R,T}},ω)
-    if ω==0
-        sum(f)
-    else
-        D=Derivative(space(f))
-        u=(D+im*ω)\f
-        -first(u)
-    end
+function fourier{T,R<:Ray}(S::UnivariateSpace{T,R},f,ω)
+    D=Derivative(S)
+    u=(D+im*ω)\Fun(f,S)
+    -first(u)
 end
 
-function fourier{S,L<:Line,T}(f::Fun{MappedSpace{S,L,T}},ω)
-    @assert domain(f)==Line()
-    if ω==0
-        sum(f)
-    else
-        fourier(Fun(x->f[x],Ray()),ω)-fourier(Fun(x->f[x],Ray(0.,π)),ω)
-    end
+function fourier{T,L<:Line}(S::UnivariateSpace{T,L},f,ω)
+    #@assert domain(f)==Line()
+    fourier(Fun(x->evaluate(f,S,x),Ray()),ω)-fourier(Fun(x->evaluate(f,S,x),Ray(0.,π)),ω)
 end
 
 
@@ -76,15 +89,16 @@ end
 ## fouriercauchy
 # calculates cauchy transform of f[x]*exp(im*ω*x)
 
+fouriercauchy(s::Bool,f::Fun,ω,z) = fouriercauchy(s,space(f),coefficients(f),ω,z)
 
-function fouriercauchy{S,L<:Line,T}(s::Bool,f::Fun{MappedSpace{S,L,T}},ω,z)
+function fouriercauchy{T,L<:Line}(s::Bool,S::UnivariateSpace{T,L},f,ω,z)
     @assert isreal(z)
-    x=Fun(identity,space(f))
-    M=Multiplication(x-z,space(f))
-    g=Fun(f-f[z],rangespace(M))
+    x=Fun(identity,S)
+    M=Multiplication(x-z,S)
+    g=Fun(f-evaluate(f,S,z),rangespace(M))
     u=M\g
     ret=fourier(u,ω)/(2π*im)
-    s?(ret+f[z]*exp(im*ω*z)):ret
+    s?(ret+evaluate(f,S,z)*exp(im*ω*z)):ret
 end
 
 
