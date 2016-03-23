@@ -2,7 +2,7 @@ __precompile__()
 module OscillatoryIntegrals
     using Base, ApproxFun, Plots
 
-    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate
+    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate, spacescompatible
 
     include("Bessel.jl")
 

@@ -14,7 +14,7 @@ typealias Besseli Bessel{1,true,:spherical}
 typealias Besselk Bessel{2,true,:spherical}
 
 domain(B::Bessel) = ℝ
-
+spacescompatible{KIND,MOD,GEOM}(A::Bessel{KIND,MOD,GEOM},B::Bessel{KIND,MOD,GEOM}) = true
 
 for (KIND,MOD,JYIK,jyik) in ((1,false,"J","j"),(2,false,"Y","y"),(1,true,"I","i"),(2,true,"K","k"))
     bjyik = symbol(string("bessel",jyik))
