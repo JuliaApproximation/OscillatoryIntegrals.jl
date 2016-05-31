@@ -17,15 +17,16 @@ export fourier,fourierintegral,fouriercauchy
 # This implementation is based on [Keller 1999]
 
 #TODO: choose rounding using domain(f)
-fourierintegral(f::Fun{Chebyshev},ω)=ω==0?integrate(f):
+fourierintegral{DD}(f::Fun{Chebyshev{DD}},ω)=ω==0?integrate(f):
         [BasisFunctional(ceil(Integer,ω));Derivative()+im*ω]\[0.,f]
 
 ## fourier returns the fourier transform
 # ∫ f(x) exp(i*w*x) dx
 
-function fourier(f,ω)
-    u=fourierintegral(f,ω)
-    last(u)*exp(im*ω)-first(u)*exp(-im*ω)
+function fourier(sp::Space,f,ω)
+    d=domain(sp)
+    u=fourierintegral(Fun(f,sp),ω)
+    last(u)*exp(im*ω*last(d))-first(u)*exp(im*ω*first(d))
 end
 
 # Fourier transform of Legendre polynomials is known
