@@ -2,7 +2,8 @@ __precompile__()
 module OscillatoryIntegrals
     using Base, ApproxFun, Plots
 
-    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate, spacescompatible
+    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate, spacescompatible,
+                        SpaceOperator, ConstantSpace
 
     include("Bessel.jl")
 
@@ -18,7 +19,8 @@ export fourier,fourierintegral,fouriercauchy
 
 #TODO: choose rounding using domain(f)
 fourierintegral{DD}(f::Fun{Chebyshev{DD}},ω)=ω==0?integrate(f):
-        [BasisFunctional(ceil(Integer,ω));Derivative()+im*ω]\[0.,f]
+        [SpaceOperator(BasisFunctional(ceil(Integer,ω)),space(f),ConstantSpace());
+         Derivative(space(f))+im*ω*I]\[0.,f]
 
 ## fourier returns the fourier transform
 # ∫ f(x) exp(i*w*x) dx
