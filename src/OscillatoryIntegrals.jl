@@ -19,8 +19,8 @@ export fourier,fourierintegral,fouriercauchy
 
 #TODO: choose rounding using domain(f)
 fourierintegral{DD}(f::Fun{Chebyshev{DD}},ω)=ω==0?integrate(f):
-        [SpaceOperator(BasisFunctional(ceil(Integer,ω)),space(f),ConstantSpace());
-         Derivative(space(f))+im*ω*I]\[0.,f]
+        linsolve([SpaceOperator(BasisFunctional(ceil(Integer,ω)),space(f),ConstantSpace());
+         Derivative(space(f))+im*ω*I],[0.,f];tolerance=10maximum(f.coefficients)*eps())
 
 ## fourier returns the fourier transform
 # ∫ f(x) exp(i*w*x) dx
