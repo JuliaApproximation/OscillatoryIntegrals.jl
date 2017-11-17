@@ -20,3 +20,14 @@ f=Fun(x->sech(x-0.1),Laurent(PeriodicLine()))
 
 
 @test fourier(f,2.) ≈ 0.27101495139940088877738507029
+
+
+## Wiener–Hopf kernel
+γ = 2.0
+Γ = Domain(-Inf .. 0) ∪ Domain(0 .. Inf) # Line split in two
+K = Fun(x -> exp(-γ*abs(x)), Γ)
+
+@test fourier(component(K,1), -1.0) ≈ 1/(γ-im*1.0)
+@test fourier(component(K,2), -1.0) ≈ 1/(γ+im*1.0)
+@test fourier(K, -1.0) ≈ 2γ/(γ^2+1.0^2)
+@test fourier(K, 2.0) ≈ 2γ/(γ^2+2.0^2)

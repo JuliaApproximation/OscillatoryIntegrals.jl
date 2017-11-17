@@ -84,15 +84,16 @@ end
 function fourier(S::Space{<:Ray}, f, ω)
     D=Derivative(S)
     u=(D+im*ω)\Fun(S,f)
-    -first(u)
+    domain(S).orientation ? -first(u) : last(u)
 end
 
-function fourier(S::Space{<:Line},f,ω)
+function fourier(S::Space{<:Line}, f, ω)
     #@assert domain(f)==Line()
     fourier(Fun(x->evaluate(f,S,x),Ray()),ω) -
         fourier(Fun(x->evaluate(f,S,x),Ray(0.,π)),ω)
 end
 
+fourier(S::PiecewiseSpace, f, ω) = sum(fourier.(components(Fun(S,f)), ω))
 
 
 ## fouriercauchy
