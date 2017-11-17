@@ -1,8 +1,8 @@
 __precompile__()
 module OscillatoryIntegrals
-    using Base, ApproxFun, Plots
+    using Base, ApproxFun
 
-    import ApproxFun: UnivariateSpace, RealUnivariateSpace, domain, evaluate, spacescompatible,
+    import ApproxFun: domain, evaluate, spacescompatible,
                         SpaceOperator, ConstantSpace
 
     include("Bessel.jl")
@@ -18,23 +18,28 @@ export fourier,fourierintegral,fouriercauchy
 # This implementation is based on [Keller 1999]
 
 #TODO: choose rounding using domain(f)
-fourierintegral{DD}(f::Fun{Chebyshev{DD}},ω)=ω==0?integrate(f):
-        linsolve([SpaceOperator(BasisFunctional(ceil(Integer,ω)),space(f),ConstantSpace());
-         Derivative(space(f))+im*ω*I],[0.,f];tolerance=10maximum(f.coefficients)*eps())
+function fourierintegral(f::Fun{<:Chebyshev}, ω)
+    if ω == 0
+        integrate(f)
+    else
+        \([BasisFunctional(ceil(Integer,ω),space(f));
+         Derivative(space(f))+im*ω*I], [0.,f]; tolerance=10maximum(f.coefficients)*eps())
+    end
+end
 
 ## fourier returns the fourier transform
 # ∫ f(x) exp(i*w*x) dx
 
-function fourier(sp::Space,f,ω)
-    d=domain(sp)
-    u=fourierintegral(Fun(f,sp),ω)
+function fourier(sp::Space, f, ω)
+    d = domain(sp)
+    u = fourierintegral(Fun(sp,f),ω)
     last(u)*exp(im*ω*last(d))-first(u)*exp(im*ω*first(d))
 end
 
 # Fourier transform of Legendre polynomials is known
 # ∫₋₁⁺¹ Pⱼ(x) e⁻ⁱʷˣ dx = 2(-i)ʲ jⱼ(ω)
 
-function fourier{T}(f::Fun{Jacobi{T,Interval{T}},T})
+function fourier(f::Fun{Jacobi{Segment{T},T},T}) where T
     a,b = f.space.a,f.space.b
     @assert a == b == 0
     @assert domain(f) == Interval{T}()
@@ -49,7 +54,7 @@ function fourier{T}(f::Fun{Jacobi{T,Interval{T}},T})
         cfs[i] *= im*s
         s *= -1
     end
-    Fun(cfs,Besselj())
+    Fun(Besselj(),cfs)
 end
 ## Webers algorithm for Fourier transforms
 
@@ -67,7 +72,7 @@ end
 fourier(f::Fun,ω) = ω == 0 ? sum(f) : fourier(space(f),coefficients(f),ω)
 
 
-function fourier{DD<:PeriodicLine}(S::Laurent{DD},f,ω)
+function fourier(S::Laurent{DD,RR}, f, ω) where {DD<:PeriodicLine,RR}
     #@assert domain(f)==PeriodicLine()
     if ω>0
         4π*exp(-ω)*webersum(f[2:2:end],ω)
@@ -76,32 +81,33 @@ function fourier{DD<:PeriodicLine}(S::Laurent{DD},f,ω)
     end
 end
 
-function fourier{T,R<:Ray}(S::UnivariateSpace{T,R},f,ω)
+function fourier(S::Space{<:Ray}, f, ω)
     D=Derivative(S)
-    u=(D+im*ω)\Fun(f,S)
+    u=(D+im*ω)\Fun(S,f)
     -first(u)
 end
 
-function fourier{T,L<:Line}(S::UnivariateSpace{T,L},f,ω)
+function fourier(S::Space{<:Line},f,ω)
     #@assert domain(f)==Line()
-    fourier(Fun(x->evaluate(f,S,x),Ray()),ω)-fourier(Fun(x->evaluate(f,S,x),Ray(0.,π)),ω)
+    fourier(Fun(x->evaluate(f,S,x),Ray()),ω) -
+        fourier(Fun(x->evaluate(f,S,x),Ray(0.,π)),ω)
 end
 
 
 
 ## fouriercauchy
-# calculates cauchy transform of f[x]*exp(im*ω*x)
+# calculates cauchy transform of f(x)*exp(im*ω*x)
 
 fouriercauchy(s::Bool,f::Fun,ω,z) = fouriercauchy(s,space(f),coefficients(f),ω,z)
 
-function fouriercauchy{T,L<:Line}(s::Bool,S::UnivariateSpace{T,L},f,ω,z)
+function fouriercauchy(s::Bool,S::Space{<:Line},f,ω,z)
     @assert isreal(z)
     x=Fun(identity,S)
     M=Multiplication(x-z,S)
-    g=Fun(f-evaluate(f,S,z),rangespace(M))
+    g=Fun(rangespace(M), f.-evaluate(f,S,z))
     u=M\g
     ret=fourier(u,ω)/(2π*im)
-    s?(ret+evaluate(f,S,z)*exp(im*ω*z)):ret
+    s ? (ret+evaluate(f,S,z)*exp(im*ω*z)) : ret
 end
 
 

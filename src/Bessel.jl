@@ -2,22 +2,22 @@ export Bessel
 export BesselJ, BesselY, BesselI, BesselK
 export Besselj, Bessely, Besseli, Besselk
 
-immutable Bessel{KIND,MOD,GEOM} <: RealUnivariateSpace{Line{false,Float64}} end
+struct Bessel{KIND,MOD,GEOM} <: Space{Line{false,Float64},Float64} end
 
-typealias BesselJ Bessel{1,false,:cylindrical}
-typealias BesselY Bessel{2,false,:cylindrical}
-typealias BesselI Bessel{1,true,:cylindrical}
-typealias BesselK Bessel{2,true,:cylindrical}
-typealias Besselj Bessel{1,false,:spherical}
-typealias Bessely Bessel{2,false,:spherical}
-typealias Besseli Bessel{1,true,:spherical}
-typealias Besselk Bessel{2,true,:spherical}
+const BesselJ = Bessel{1,false,:cylindrical}
+const BesselY = Bessel{2,false,:cylindrical}
+const BesselI = Bessel{1,true,:cylindrical}
+const BesselK = Bessel{2,true,:cylindrical}
+const Besselj = Bessel{1,false,:spherical}
+const Bessely = Bessel{2,false,:spherical}
+const Besseli = Bessel{1,true,:spherical}
+const Besselk = Bessel{2,true,:spherical}
 
 domain(B::Bessel) = ℝ
 spacescompatible{KIND,MOD,GEOM}(A::Bessel{KIND,MOD,GEOM},B::Bessel{KIND,MOD,GEOM}) = true
 
 for (KIND,MOD,JYIK,jyik) in ((1,false,"J","j"),(2,false,"Y","y"),(1,true,"I","i"),(2,true,"K","k"))
-    bjyik = symbol(string("bessel",jyik))
+    bjyik = parse(":bessel$jyik")
     @eval begin
         Base.show(io::IO,B::Bessel{$KIND,$MOD,:cylindrical}) = print(io,string($JYIK,"ᵢ(ℝ)"))
         Base.show(io::IO,B::Bessel{$KIND,$MOD,:spherical}) = print(io,string($jyik,"ᵢ(ℝ)"))
@@ -27,5 +27,5 @@ for (KIND,MOD,JYIK,jyik) in ((1,false,"J","j"),(2,false,"Y","y"),(1,true,"I","i"
     end
 end
 
-Plots.plot{B<:Bessel,T<:Real}(f::Fun{B,Complex{T}};grid=true,kwds...) = plot!(plot(grid=grid),f;kwds...)
-Plots.plot!{B<:Bessel,T<:Real}(plt::Plots.Plot,f::Fun{B,Complex{T}};kwds...) = plot!(plt,linspace(-max(length(f),10),max(length(f),10),6length(f)+100),f;kwds...)
+# Plots.plot{B<:Bessel,T<:Real}(f::Fun{B,Complex{T}};grid=true,kwds...) = plot!(plot(grid=grid),f;kwds...)
+# Plots.plot!{B<:Bessel,T<:Real}(plt::Plots.Plot,f::Fun{B,Complex{T}};kwds...) = plot!(plt,linspace(-max(length(f),10),max(length(f),10),6length(f)+100),f;kwds...)
