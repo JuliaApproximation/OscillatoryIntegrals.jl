@@ -23,7 +23,7 @@ function fourierintegral(f::Fun{<:Chebyshev}, ω)
         integrate(f)
     else
         \([BasisFunctional(ceil(Integer,ω),space(f));
-         Derivative(space(f))+im*ω*I], [0.,f]; tolerance=10maximum(f.coefficients)*eps())
+         Derivative(space(f))+im*ω*I], Any[0.,f]; tolerance=10maximum(f.coefficients)*eps())
     end
 end
 
