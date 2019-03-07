@@ -14,10 +14,10 @@ const Besseli = Bessel{1,true,:spherical}
 const Besselk = Bessel{2,true,:spherical}
 
 domain(B::Bessel) = ℝ
-spacescompatible{KIND,MOD,GEOM}(A::Bessel{KIND,MOD,GEOM},B::Bessel{KIND,MOD,GEOM}) = true
+spacescompatible(A::Bessel{KIND,MOD,GEOM},B::Bessel{KIND,MOD,GEOM}) where {KIND,MOD,GEOM} = true
 
 for (KIND,MOD,JYIK,jyik) in ((1,false,"J","j"),(2,false,"Y","y"),(1,true,"I","i"),(2,true,"K","k"))
-    bjyik = parse(":bessel$jyik")
+    bjyik = Meta.parse(":bessel$jyik")
     @eval begin
         Base.show(io::IO,B::Bessel{$KIND,$MOD,:cylindrical}) = print(io,string($JYIK,"ᵢ(ℝ)"))
         Base.show(io::IO,B::Bessel{$KIND,$MOD,:spherical}) = print(io,string($jyik,"ᵢ(ℝ)"))

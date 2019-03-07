@@ -1,6 +1,6 @@
-__precompile__()
+
 module OscillatoryIntegrals
-    using Base, ApproxFun
+    using Base, ApproxFun, LinearAlgebra
 
     import ApproxFun: domain, evaluate, spacescompatible,
                         SpaceOperator, ConstantSpace
@@ -9,7 +9,7 @@ module OscillatoryIntegrals
 
 # TODO: Fourier weight
 
-export fourier,fourierintegral,fouriercauchy
+export fourier, fourierintegral, fouriercauchy, fouriercos, fouriersin
 
 
 ## fourierintegral calculates a function u so that u(x) exp(i ω x)
@@ -33,7 +33,7 @@ end
 function fourier(sp::Space, f, ω)
     d = domain(sp)
     u = fourierintegral(Fun(sp,f),ω)
-    last(u)*exp(im*ω*last(d))-first(u)*exp(im*ω*first(d))
+    last(u)*exp(im*ω*rightendpoint(d))-first(u)*exp(im*ω*leftendpoint(d))
 end
 
 # Fourier transform of Legendre polynomials is known
@@ -110,6 +110,10 @@ function fouriercauchy(s::Bool,S::Space{<:Line},f,ω,z)
     ret=fourier(u,ω)/(2π*im)
     s ? (ret+evaluate(f,S,z)*exp(im*ω*z)) : ret
 end
+
+
+fouriercos(f, k) = (fourier(f, k) + fourier(f, -k))/2
+fouriersin(f, k) = (fourier(f, k) - fourier(f, -k))/(2im)
 
 
 end #module
