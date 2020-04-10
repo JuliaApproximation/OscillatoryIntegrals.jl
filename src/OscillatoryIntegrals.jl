@@ -1,11 +1,11 @@
 
 module OscillatoryIntegrals
-    using Base, ApproxFun, LinearAlgebra
+using Base, ApproxFun, LinearAlgebra, SpecialFunctions
 
-    import ApproxFun: domain, evaluate, spacescompatible,
-                        SpaceOperator, ConstantSpace
+import ApproxFun: domain, evaluate, spacescompatible,
+					SpaceOperator, ConstantSpace
 
-    include("Bessel.jl")
+include("Bessel.jl")
 
 # TODO: Fourier weight
 
